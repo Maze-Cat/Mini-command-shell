@@ -1,0 +1,671 @@
+Start myShell by running
+
+    ./myshell
+
+You will see that myShell prints "myShell:...$", where in the middle is
+the current working directory.
+
+If enter return, the prompt will print again waiting for command.
+The following are testcases.
+
+
+**********************************************************************************
+(1) Run
+
+    /bin/ls
+
+You will see files and directories in current directory,
+followed by a line
+
+    Program exited with status 0
+
+And then print prompt again.
+
+This is correct because myShell runs command 'ls', which lies in bin directory.
+The exit status is then captured and printed by myShell.  After the program exits,
+myShell prints another prompt string and waits for your input.
+
+**********************************************************************************
+(2) Run
+
+    /usr/ls
+
+You will see 
+
+    Command /usr/ls not found
+    Program exited with status 1
+
+
+This is correct because myShell can't find "ls" in the directory usr. Note that 
+there is memory leak because this not found situation is treated as failure in 
+the child process. You should exit and reopen the program for a better view of 
+valgrind.
+
+**********************************************************************************
+
+(3) Run
+
+    ./testBlank a\ s dfg
+
+You will see 
+
+    ./testBlank
+    a s
+    dfg
+    Program exited with status 0
+
+Note that testBlank is a program that takes in arguments and parse them into 
+tokens seperated by blank space.
+
+This is correct because myShell runs the program testBlank, and exits with status 1.
+The "\"" symbol saves blank space from deleted. 
+
+**********************************************************************************
+
+(4) Run
+
+    ls
+
+You will see the same output as in (1).
+
+This is correct because myShell searches for an executable file named "ls" in 
+the directories specified by the environment path. Because bin is in PATH, myShell 
+finds /bin/ls, and runs the program.
+
+**********************************************************************************
+
+(5) Run
+
+    as
+
+
+You will see 
+
+    Command as not found
+    Program exited with status 1
+
+This is correct because when myShell searches for "as", and doesn't find it. 
+Note that there is memory leak because this not found situation is treated as 
+failure in the child process.You should exit and reopen the program for a better 
+view of valgrind.
+
+**********************************************************************************
+
+(6) Run
+
+    ..
+
+You will see 
+
+    Command .. not found
+    Program exited with status 1
+
+This is correct because .. is a directory, and myShell can not execute
+it. Note that there is memory leak because this not found situation is 
+treated as failure in the child process.You should exit and reopen the program 
+for a better view of valgrind.
+
+**********************************************************************************
+
+(7) Run
+
+    ./Makefile
+
+You will see 
+
+    ERROR:execve failed
+    Program exited with status 1
+
+This is correct because ./Makefile is not a executable file.
+Note that there is inevitable memory leak now, because we are facing 
+an execve fail. You should exit the program by typing "exit" 
+and reopen to continue testing.
+
+**********************************************************************************
+
+(8) Run
+
+    echo welcome to myshell
+
+You will see 
+
+    welcome to myshell
+    Program exited with status 0
+
+This is correct because /bin/echo runs, and "echo" prints the arguments and
+exits with status 0.
+
+**********************************************************************************
+
+(9) Run
+
+    echo  welcome    to myshell
+
+You will see 
+
+    welcome to myshell
+    Program exited with status 0
+
+This is correct because consecutive spaces and tabs are treated as a single
+space when parsing.
+
+**********************************************************************************
+
+(10) Run
+
+    echo  welcome\  to myshell
+
+You will see 
+
+    welcome  to myshell
+    Program exited with status 0
+
+Note that there are two blanks between "welcome" and "to", because "\" saves
+a blank.
+
+**********************************************************************************
+
+(11) Run
+
+    echo \\
+
+You will see 
+
+    (nothing)
+    Program exited with status 0
+
+
+This is correct because in my implementation, a backslash followed by
+nothing in the end would be treated as illegal and print nothing in return.
+
+**********************************************************************************
+
+(12) Run
+
+    echo \
+
+Same as (11)
+
+**********************************************************************************
+
+(13) Run
+
+    cd  
+
+You will see the prompt shows again waiting for commands.
+
+This is correct because there is no input directory for cd to change. 
+
+**********************************************************************************
+
+(14) Run
+
+    cd ..
+
+You will see 
+
+    myShell:/a/b/c$
+    becomes
+    myShell:/a/b$
+
+This is correct because the cd command directs current directory to be
+the parent directory of original directory.
+
+**********************************************************************************
+
+(15) Run
+
+    cd a
+
+You will see 
+
+    chdir: No such file or directory
+
+This is correct because there is no directory named a.
+
+**********************************************************************************
+
+(16) Run
+
+    cd .. a
+
+You will see 
+
+    ERROR:wrong number input for cd
+
+This is correct because "cd" command only takes in one argument.
+When there is more coming in, violation is invoked.
+
+**********************************************************************************
+
+(17) Run
+
+    cd /root
+
+You will see 
+
+    chdir: Permission denied
+
+and the working directory is not changed (unless you have the permission
+to access /root).
+
+This is correct because when myShell fails to change the directory,
+it reports an error and stays where it was.
+
+**********************************************************************************
+
+(18) Run
+
+    set apple red
+    $apple
+
+You will see 
+
+    red
+
+This is correct because when executing "set apple red", the value
+of apple is set to "red".  When executing "$apple",
+it returns its value, which is red.
+
+**********************************************************************************
+
+(19) Run
+
+    set apple     red
+    $apple
+
+You will see 
+
+    red
+
+This is correct because mutiple blank spaces would be treated as one
+when parsing.
+
+**********************************************************************************
+
+(20) Run
+
+    set apple_1A     red
+    $apple_1A
+
+You will see 
+
+    red
+
+This is correct because the variable name can be a combination of letters 
+(case sensitive), underscores,and numbers.
+
+**********************************************************************************
+
+(21) Run
+
+    set  apple\ s    red
+
+You will see 
+
+    ERROR:illegal variable name: (last error)
+
+This is correct because the variable name doesn't meet the principle
+of environment variable.(Can only be be a combination of letters 
+(case sensitive), underscores,and numbers)
+
+**********************************************************************************
+
+(22) Run
+
+    set  apple.s    red
+
+You will see 
+
+    ERROR:illegal variable name: (last error)
+
+This is correct because the variable name doesn't meet the principle
+of environment variable.(Can only be be a combination of letters 
+(case sensitive), underscores,and numbers)
+
+**********************************************************************************
+
+(23) Run
+
+    set  apple red\ s
+    $apple
+
+You will see 
+
+    red s
+
+This is correct because we can set any value to the variable.
+
+**********************************************************************************
+
+(24) Run
+
+    set apple
+
+You will see 
+
+    ERROR:setVar--not enough arguments: (last error)
+
+This is correct because we need a value for the variable
+
+**********************************************************************************
+
+(25) Run
+
+    $y
+
+Note that y is not defined.
+You will see a blank line is printed.
+
+This is correct because a non-existent variable expands to an empty string.
+
+**********************************************************************************
+
+(26) Run
+
+    set apple red
+    $apple+
+
+You will see 
+
+    red+
+
+This is correct because when reading in command, the complier parses the legal inputs
+(alphabet, numeber and underscore) and pairs it to the value and leaves the rest character 
+untoouched.
+
+**********************************************************************************
+
+(27) Run
+
+    $...
+
+You will see 
+
+    ...
+
+This is correct because the characters following $ are not
+a valid variable name, so no expansion takes place.
+
+**********************************************************************************
+
+(28) Run
+
+    $
+
+You will see 
+
+    (nothing)
+
+This is correct because of the same reason for the last test case.
+
+**********************************************************************************
+
+(29) Run
+
+    set x $
+    $x
+
+You will see 
+
+    $
+
+This is correct because in the first command, the $ does not introduce
+an expansion, as no valid characters follow, so x is set to "$".
+
+**********************************************************************************
+
+(30) Run
+
+    set x 1
+    set x \$y
+    $x
+
+You will see 
+
+    $y
+
+This is correct because in the second command, '\$' translates to a plain
+dollar sign, so x is set to "$y".  In the third command,
+$x is expanded to "$y", and is not further expanded.
+
+**********************************************************************************
+
+(31) Run
+
+    set x y
+    $$x
+
+You will see 
+
+    y
+
+This is correct because a variable named "$x" is not allowed. Therefore, 
+the complier parses next dollar sign.
+
+**********************************************************************************
+
+(32) Run
+
+    set apple red
+    env
+
+You will see a list of environment variables, but apple is not in the list.
+
+This is correct because variables that are not exported does not show up
+in the environment.
+
+**********************************************************************************
+
+(33) Run
+
+    set apple red
+    export apple
+    env
+
+You will see a list of environment variables, and apple is in the list,
+shown as "apple=red"
+
+This is correct because the export command exports the variable
+to the environment.
+
+**********************************************************************************
+
+(34) Run
+
+    set apple red
+    export apple
+    set apple green
+    export apple
+    env
+
+You will see a list of environment variables, and apple is in the list,
+shown as "apple=green"
+
+This is correct because the export command changes the orignal environment 
+variable, and replace it with the new value.
+
+**********************************************************************************
+
+(35) Run
+
+    set PATH /usr
+    export PATH
+    ls
+
+You will see 
+    
+    Command ls not found
+    Program exited with status 1
+
+This is correct because PATH has been changed to a directory which does not 
+have "ls", then it would not execute.Note that there is memory leak because 
+this not found situation is treated as failure in the child process. You should 
+exit and reopen the program for a better view of valgrind.
+
+**********************************************************************************
+
+(36) Run
+
+    set PATH /bin
+    export PATH
+    ls
+
+You will see 
+    
+    same output as "ls"
+
+This is correct because PATH has reset to a directory which has "ls".
+
+**********************************************************************************
+
+(37) Run
+
+    export
+
+You will see 
+
+    ERROR:export--wrong number of arguments: (last error)
+
+This is correct because the export command takes exactly one argument.
+
+**********************************************************************************
+
+(38) Run
+
+    export x y z
+
+You will see 
+
+    ERROR:export--wrong number of arguments: (last error)
+
+This is correct because the export command takes exactly one argument.
+Since three arguments are given, myShell complains.
+
+**********************************************************************************
+
+(39) Run
+
+    export x^
+
+You will see 
+
+    ERROR:no variable to export: (last error)
+
+This is correct because '^' is not allowed when set variable name, thus we would
+never have the according variable to export.
+
+**********************************************************************************
+
+(40) Run
+
+    is
+    inc apple
+    $apple
+
+You will see 
+
+    1
+
+This is correct because the value of "apple" is not a decimal number, thus "inc"
+makes the value of it to be a number increased from 0.
+
+**********************************************************************************
+
+(41) Run
+
+    set apple 001
+    inc apple
+    $apple
+
+You will see 
+
+    2
+
+This is correct because the value of "apple" is a decimal number, thus "inc"
+increase its value.
+
+**********************************************************************************
+
+(42) Run
+
+    set apple 123457890
+    inc apple
+    $apple
+
+You will see 
+
+    1234567891
+
+This is correct because the value of "apple" is a decimal number, thus "inc"
+increase its value.
+
+**********************************************************************************
+
+(43) Run
+
+    set apple ash12
+    inc apple
+    $apple
+
+You will see 
+
+    1
+
+This is correct because the value of "apple" is not a decimal number, thus "inc"
+makes the value of it to be a number increased from 0.
+
+**********************************************************************************
+
+(44) Run
+
+    inc x
+    $x
+
+You will see 
+
+    (blank space)
+
+This is correct because the variable "xi" does not exist, thus we cannot increase 
+it.
+
+**********************************************************************************
+
+(45) Run
+
+    inc 
+
+You will see 
+
+    ERROR:inc--wrong number of arugments: Success
+
+This is correct because inc takes exactly one argument.
+
+**********************************************************************************
+
+(46) Run
+
+    inc a b c
+
+You will see 
+
+    ERROR:inc--wrong number of arugments: Success
+
+This is correct because inc takes exactly one argument.
+
+**********************************************************************************
+
+(47) Run
+
+    bash -c kill\ $$
+
+You will see 
+
+    Program was killed by signal 15
+
+This is correct because bash is run with two arguments: "-c" and 
+"kill $$".  When bash is running it kills itself.  Therefore myShell
+reports accordingly.
+
+Note that there is inevitable memory leak here due to an unexpectedly 
+exit.
